@@ -7,21 +7,13 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <!-- Chosen Palette: Subtle & Supportive -->
-    <!-- Application Structure Plan: A task-oriented dashboard structure was chosen over a linear report format to empower the family with quick, decision-making tools. The core user need is to plan days based on unpredictable weather. Therefore, the information architecture prioritizes a weather-based filter ("Sonnig", "Wolkig/Regen") at the top level. This leads to an interactive "Activity Explorer" with cards that can be further filtered by type and travel time. This structure directly addresses the user's need for flexibility and is more practical for on-the-go planning than a static document. Key data, like Kärnten Card savings and hike comparisons, are presented as charts for immediate comprehension. -->
-    <!-- Visualization & Content Choices: 
-        - Kärnten Card Savings: Report Info -> Table of savings. Goal -> Inform & Compare. Viz -> Donut Chart (Chart.js) to show proportional value of the card at a glance. Interaction -> Hover tooltips. Justification -> More engaging and quicker to digest than a table.
-        - Activity List: Report Info -> Long text descriptions of various destinations. Goal -> Organize & Compare. Viz -> Interactive card grid. Interaction -> JS-powered filtering by weather, type, and travel time. Justification -> Empowers users to find the perfect activity for the moment, which is the primary goal of a vacation planner.
-        - Hike Comparison: Report Info -> Three distinct hike descriptions. Goal -> Compare. Viz -> Side-by-side cards with a summary bar chart (Chart.js) comparing key metrics (Difficulty, Duration). Interaction -> Clicking a card could show more details. Justification -> Facilitates a clear, data-driven choice for the family's desired "big hike".
-        - Travel Times: Report Info -> Travel times scattered in text. Goal -> Compare. Viz -> Horizontal Bar Chart (Chart.js). Justification -> Aggregates and visualizes travel logistics for easier planning.
-        - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         body {
             font-family: 'Inter', sans-serif;
             background-color: #F8F7F4; /* Warm Neutral */
             color: #4A4A4A;
         }
-        .chart-container {
+       .chart-container {
             position: relative;
             width: 100%;
             max-width: 500px;
@@ -30,25 +22,30 @@
             height: 320px;
             max-height: 400px;
         }
-        .nav-button {
+       .nav-button {
             transition: all 0.3s ease;
         }
-        .nav-button.active {
+       .nav-button.active {
             background-color: #6B8A7A; /* Muted Green */
             color: white;
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         }
-        .filter-button.active {
+       .filter-button.active {
             background-color: #A77360; /* Muted Terracotta */
             color: white;
         }
-        .activity-card {
+       .activity-card {
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             will-change: transform;
         }
-        .activity-card:hover {
+       .activity-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        audio {
+            width: 100%;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
         }
     </style>
 </head>
@@ -76,6 +73,14 @@
             <h2 class="text-3xl font-bold text-center mb-2" style="color: #333;">Ihr Abenteuer auf einen Blick</h2>
             <p class="text-center text-gray-600 mb-8 max-w-3xl mx-auto">Dieser Planer hilft Ihnen, das Beste aus Ihrem Urlaub herauszuholen. Entdecken Sie die Vorteile Ihrer Kärnten Card und finden Sie die perfekten Ausflüge für Ihre Familie.</p>
             
+            <div class="bg-white p-6 rounded-xl shadow-lg mb-8">
+                <h3 class="font-bold text-xl mb-4 text-center">Audio-Zusammenfassung anhören</h3>
+                <audio controls>
+                    <source src="urlaubsplaner-zusammenfassung.mp3" type="audio/mpeg">
+                    Ihr Browser unterstützt das Audio-Element nicht.
+                </audio>
+            </div>
+
             <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
                 <div class="lg:col-span-3 bg-white p-6 rounded-xl shadow-lg">
                     <h3 class="font-bold text-xl mb-4 text-center">Ihr Kärnten Card Vorteil: Sparen bei jedem Ausflug</h3>
@@ -264,7 +269,9 @@
             grid.innerHTML = '';
             const filteredActivities = activities.filter(activity => {
                 const weatherMatch = activity.weather === currentFilters.weather;
-                const typeMatch = currentFilters.type === 'alle' || activity.type.includes(currentFilters.type);
+                const typeMatch = currentFilters.type === 'alle' |
+
+| activity.type.includes(currentFilters.type);
                 return weatherMatch && typeMatch;
             });
 
@@ -303,9 +310,9 @@
                     tooltip: {
                         callbacks: {
                             title: function(tooltipItems) {
-                                const item = tooltipItems[0];
+                                const item = tooltipItems;
                                 let label = item.chart.data.labels[item.dataIndex];
-                                return Array.isArray(label) ? label.join(' ') : label;
+                                return Array.isArray(label)? label.join(' ') : label;
                             }
                         }
                     }
@@ -318,11 +325,11 @@
                 new Chart(savingsCtx, {
                     type: 'doughnut',
                     data: {
-                        labels: ['Bergbahnen Gerlitzen', 'Affenberg', 'Pyramidenkogel', 'Tierpark Rosegg', 'Nockalmstraße'],
+                        labels:,
                         datasets: [{
                             label: 'Ersparnis in €',
                             data: [71.50, 41.00, 40.00, 39.00, 24.00],
-                            backgroundColor: ['#6B8A7A', '#A77360', '#D6C3B3', '#8B7E74', '#C3B091'],
+                            backgroundColor:,
                             borderColor: '#F8F7F4',
                             borderWidth: 4,
                         }]
@@ -331,7 +338,7 @@
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
-                            ...defaultTooltipCallback.plugins,
+                           ...defaultTooltipCallback.plugins,
                             legend: {
                                 position: 'bottom',
                                 labels: {
@@ -350,11 +357,11 @@
                 new Chart(hikeCompareCtx, {
                     type: 'bar',
                     data: {
-                        labels: ['Gerlitzen Alpe', 'Nockalmstraße', 'Tschiernock'],
+                        labels:,
                         datasets: [
                             {
                                 label: 'Familienfreundlichkeit (1-5)',
-                                data: [5, 4, 2],
+                                data: [1, 2, 3],
                                 backgroundColor: '#6B8A7A',
                                 borderWidth: 1
                             },
@@ -373,7 +380,7 @@
                             y: { beginAtZero: true }
                         },
                         plugins: {
-                            ...defaultTooltipCallback.plugins,
+                           ...defaultTooltipCallback.plugins,
                             legend: {
                                 position: 'top',
                             },
