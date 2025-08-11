@@ -7,13 +7,21 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Subtle & Supportive -->
+    <!-- Application Structure Plan: A task-oriented dashboard structure was chosen over a linear report format to empower the family with quick, decision-making tools. The core user need is to plan days based on unpredictable weather. Therefore, the information architecture prioritizes a weather-based filter ("Sonnig", "Wolkig/Regen") at the top level. This leads to an interactive "Activity Explorer" with cards that can be further filtered by type and travel time. This structure directly addresses the user's need for flexibility and is more practical for on-the-go planning than a static document. Key data, like Kärnten Card savings and hike comparisons, are presented as charts for immediate comprehension. -->
+    <!-- Visualization & Content Choices: 
+        - Kärnten Card Savings: Report Info -> Table of savings. Goal -> Inform & Compare. Viz -> Donut Chart (Chart.js) to show proportional value of the card at a glance. Interaction -> Hover tooltips. Justification -> More engaging and quicker to digest than a table.
+        - Activity List: Report Info -> Long text descriptions of various destinations. Goal -> Organize & Compare. Viz -> Interactive card grid. Interaction -> JS-powered filtering by weather, type, and travel time. Justification -> Empowers users to find the perfect activity for the moment, which is the primary goal of a vacation planner.
+        - Hike Comparison: Report Info -> Three distinct hike descriptions. Goal -> Compare. Viz -> Side-by-side cards with a summary bar chart (Chart.js) comparing key metrics (Difficulty, Duration). Interaction -> Clicking a card could show more details. Justification -> Facilitates a clear, data-driven choice for the family's desired "big hike".
+        - Travel Times: Report Info -> Travel times scattered in text. Goal -> Compare. Viz -> Horizontal Bar Chart (Chart.js). Justification -> Aggregates and visualizes travel logistics for easier planning.
+        - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         body {
             font-family: 'Inter', sans-serif;
             background-color: #F8F7F4; /* Warm Neutral */
             color: #4A4A4A;
         }
-       .chart-container {
+        .chart-container {
             position: relative;
             width: 100%;
             max-width: 500px;
@@ -22,23 +30,23 @@
             height: 320px;
             max-height: 400px;
         }
-       .nav-button {
+        .nav-button {
             transition: all 0.3s ease;
         }
-       .nav-button.active {
+        .nav-button.active {
             background-color: #6B8A7A; /* Muted Green */
             color: white;
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         }
-       .filter-button.active {
+        .filter-button.active {
             background-color: #A77360; /* Muted Terracotta */
             color: white;
         }
-       .activity-card {
+        .activity-card {
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             will-change: transform;
         }
-       .activity-card:hover {
+        .activity-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
         }
@@ -46,6 +54,9 @@
             width: 100%;
             border-radius: 8px;
             border: 1px solid #e5e7eb;
+        }
+        .table-container {
+            overflow-x: auto;
         }
     </style>
 </head>
@@ -62,6 +73,7 @@
                     <a href="#ueberblick" class="px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-200">Überblick</a>
                     <a href="#aktivitaeten" class="px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-200">Aktivitäten</a>
                     <a href="#wanderung" class="px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-200">Die Wanderung</a>
+                    <a href="#zeitplan" class="px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-200">Zeitplan</a>
                 </nav>
             </div>
         </div>
@@ -81,6 +93,14 @@
                 </audio>
             </div>
 
+            <div class="bg-white p-6 rounded-xl shadow-lg mb-8 text-center">
+                <h3 class="font-bold text-xl mb-4">Alle Details im Überblick</h3>
+                <p class="text-gray-600 mb-4">Für eine tiefere Lektüre und alle Hintergrundinformationen können Sie hier den vollständigen Reiseführer als Dokument aufrufen.</p>
+                <a href="https://docs.google.com/document/d/1-YlyrL1lYagxoPDQSSpyPMlF2i0kqnPJwVK3IsTFomc/edit?usp=sharing" target="_blank" rel="noopener noreferrer" class="inline-block bg-blue-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-700 transition-colors">
+                    Zum vollständigen Reiseführer (Google Doc)
+                </a>
+            </div>
+
             <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
                 <div class="lg:col-span-3 bg-white p-6 rounded-xl shadow-lg">
                     <h3 class="font-bold text-xl mb-4 text-center">Ihr Kärnten Card Vorteil: Sparen bei jedem Ausflug</h3>
@@ -97,7 +117,7 @@
             </div>
         </section>
 
-        <section id="aktivitaeten">
+        <section id="aktivitaeten" class="mb-16">
             <h2 class="text-3xl font-bold text-center mb-2" style="color: #333;">Interaktiver Aktivitäten-Explorer</h2>
             <p class="text-center text-gray-600 mb-8 max-w-3xl mx-auto">Wählen Sie das Wetter und filtern Sie die Aktivitäten nach Ihren Wünschen. Finden Sie das perfekte Abenteuer für heute – egal ob Sonne oder Regen.</p>
 
@@ -129,7 +149,7 @@
             </div>
         </section>
 
-        <section id="wanderung" class="mt-16">
+        <section id="wanderung" class="mb-16">
             <h2 class="text-3xl font-bold text-center mb-2" style="color: #333;">Der Gipfelsturm: Vergleich der Top-Wanderungen</h2>
             <p class="text-center text-gray-600 mb-8 max-w-3xl mx-auto">Ihr wollt eine längere Wanderung machen? Hier sind die drei besten Optionen im direkten Vergleich, um die perfekte Tour für eure Familie zu finden.</p>
 
@@ -153,6 +173,97 @@
                     <h4 class="font-bold text-lg mb-2">Authentische Herausforderung: Tschiernock</h4>
                     <p class="text-sm text-gray-600">Ein echtes Bergerlebnis direkt vom Hof aus. Diese Tour erfordert eine gute Kondition und sollte nur nach ausführlicher Beratung mit den Gastgebern Chrissi und Hans unternommen werden.</p>
                 </div>
+            </div>
+        </section>
+
+        <section id="zeitplan" class="mb-16">
+            <h2 class="text-3xl font-bold text-center mb-2" style="color: #333;">Flexibler 12-Tage-Abenteuerplan</h2>
+            <p class="text-center text-gray-600 mb-8 max-w-3xl mx-auto">Dieser Vorschlag ist ein Baukasten. Tauschen Sie die Tage einfach je nach Wetter und Lust und Laune. Ruhige Tage am Hof sind genauso wichtig wie große Ausflüge.</p>
+            <div class="bg-white p-6 rounded-xl shadow-lg table-container">
+                <table class="w-full text-sm text-left text-gray-500">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3">Tag (Datum)</th>
+                            <th scope="col" class="px-6 py-3">Wetter-Fokus</th>
+                            <th scope="col" class="px-6 py-3">Highlight des Tages</th>
+                            <th scope="col" class="px-6 py-3">Praktische Hinweise</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="bg-white border-b">
+                            <td class="px-6 py-4 font-medium text-gray-900">Tag 1 (Sa, 23.08.)</td>
+                            <td class="px-6 py-4">Ankunft</td>
+                            <td class="px-6 py-4">Ankommen & Hof erkunden: Tiere begrüßen, Spielplatz testen.</td>
+                            <td class="px-6 py-4">In Ruhe auspacken und den ersten Abend im Gastzimmer ausklingen lassen.</td>
+                        </tr>
+                        <tr class="bg-gray-50 border-b">
+                            <td class="px-6 py-4 font-medium text-gray-900">Tag 2 (So, 24.08.)</td>
+                            <td class="px-6 py-4">Sonne</td>
+                            <td class="px-6 py-4">Gipfelsturm Gerlitzen Alpe oder Nockalmstraße.</td>
+                            <td class="px-6 py-4">Kärnten Card nutzen. Rückentrage vom Hof für den 3-Jährigen leihen.</td>
+                        </tr>
+                        <tr class="bg-white border-b">
+                            <td class="px-6 py-4 font-medium text-gray-900">Tag 3 (Mo, 25.08.)</td>
+                            <td class="px-6 py-4">Wolken/Regen</td>
+                            <td class="px-6 py-4">Geheimnisvolle Welten: Sagamundo & Granatium.</td>
+                            <td class="px-6 py-4">Kurze Fahrtzeiten, Kärnten Card Rabatte nutzen. Alternative: Planet Lollipop.</td>
+                        </tr>
+                        <tr class="bg-gray-50 border-b">
+                            <td class="px-6 py-4 font-medium text-gray-900">Tag 4 (Di, 26.08.)</td>
+                            <td class="px-6 py-4">Sonne/Wolken</td>
+                            <td class="px-6 py-4">Hof-Tag: Ponyreiten, Mithilfe im Stall, Traktorfahrt.</td>
+                            <td class="px-6 py-4">Die festen Programmpunkte am Hof nutzen. Alternative: Wassererlebnisweg Maltatal.</td>
+                        </tr>
+                        <tr class="bg-white border-b">
+                            <td class="px-6 py-4 font-medium text-gray-900">Tag 5 (Mi, 27.08.)</td>
+                            <td class="px-6 py-4">Sonne</td>
+                            <td class="px-6 py-4">Tier-Abenteuer: Tierpark Rosegg mit Labyrinth.</td>
+                            <td class="px-6 py-4">Kärnten Card für freien Eintritt nutzen. Extra-Budget für das Labyrinth.</td>
+                        </tr>
+                        <tr class="bg-gray-50 border-b">
+                            <td class="px-6 py-4 font-medium text-gray-900">Tag 6 (Do, 28.08.)</td>
+                            <td class="px-6 py-4">Regen</td>
+                            <td class="px-6 py-4">Thermentag in der Therme St. Kathrein.</td>
+                            <td class="px-6 py-4">Badesachen einpacken. 15% Rabatt mit Kärnten Card, Kinder bis 5 J. gratis.</td>
+                        </tr>
+                        <tr class="bg-white border-b">
+                            <td class="px-6 py-4 font-medium text-gray-900">Tag 7 (Fr, 29.08.)</td>
+                            <td class="px-6 py-4">Sonne</td>
+                            <td class="px-6 py-4">Aussicht & Adrenalin: Ausflug zum Pyramidenkogel.</td>
+                            <td class="px-6 py-4">Kärnten Card für freien Eintritt zum Turm nutzen. Mindestgröße für Rutsche (130cm) prüfen.</td>
+                        </tr>
+                        <tr class="bg-gray-50 border-b">
+                            <td class="px-6 py-4 font-medium text-gray-900">Tag 8 (Sa, 30.08.)</td>
+                            <td class="px-6 py-4">Sonne/Wolken</td>
+                            <td class="px-6 py-4">Nockalmstraße intensiv erkunden oder Wanderung am Hausberg.</td>
+                            <td class="px-6 py-4">Picknick einpacken. Für Hausberg-Wanderung unbedingt mit Gastgebern sprechen.</td>
+                        </tr>
+                        <tr class="bg-white border-b">
+                            <td class="px-6 py-4 font-medium text-gray-900">Tag 9 (So, 31.08.)</td>
+                            <td class="px-6 py-4">Hof-Tag</td>
+                            <td class="px-6 py-4">Entspannung: Ausschlafen, Frühstückskorb, im Pool planschen.</td>
+                            <td class="px-6 py-4">Ein ruhiger Tag zur Erholung für die ganze Familie.</td>
+                        </tr>
+                        <tr class="bg-gray-50 border-b">
+                            <td class="px-6 py-4 font-medium text-gray-900">Tag 10 (Mo, 01.09.)</td>
+                            <td class="px-6 py-4">Wolken/Regen</td>
+                            <td class="px-6 py-4">Tag der Wahl: Lieblings-Schlechtwetter-Programm wiederholen.</td>
+                            <td class="px-6 py-4">Flexibilität ist der Schlüssel. Die Kinder entscheiden lassen.</td>
+                        </tr>
+                        <tr class="bg-white border-b">
+                            <td class="px-6 py-4 font-medium text-gray-900">Tag 11 (Di, 02.09.)</td>
+                            <td class="px-6 py-4">Sonne</td>
+                            <td class="px-6 py-4">Letzter großer Ausflug: Lieblingsziel ansteuern oder Verpasstes nachholen.</td>
+                            <td class="px-6 py-4">Den letzten vollen Urlaubstag bewusst genießen und Erinnerungen sammeln.</td>
+                        </tr>
+                        <tr class="bg-gray-50">
+                            <td class="px-6 py-4 font-medium text-gray-900">Tag 12 (Mi, 03.09.)</td>
+                            <td class="px-6 py-4">Abreise</td>
+                            <td class="px-6 py-4">Abschied nehmen: Ein letztes Mal die Tiere füttern, im Hofladen Proviant für die Heimreise kaufen.</td>
+                            <td class="px-6 py-4">Gemütlich packen und die Heimreise antreten.</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </section>
 
@@ -266,12 +377,11 @@
 
         const renderActivities = () => {
             const grid = document.getElementById('activity-grid');
+            if (!grid) return;
             grid.innerHTML = '';
             const filteredActivities = activities.filter(activity => {
                 const weatherMatch = activity.weather === currentFilters.weather;
-                const typeMatch = currentFilters.type === 'alle' |
-
-| activity.type.includes(currentFilters.type);
+                const typeMatch = currentFilters.type === 'alle' || activity.type.includes(currentFilters.type);
                 return weatherMatch && typeMatch;
             });
 
@@ -310,26 +420,25 @@
                     tooltip: {
                         callbacks: {
                             title: function(tooltipItems) {
-                                const item = tooltipItems;
+                                const item = tooltipItems[0];
                                 let label = item.chart.data.labels[item.dataIndex];
-                                return Array.isArray(label)? label.join(' ') : label;
+                                return Array.isArray(label) ? label.join(' ') : label;
                             }
                         }
                     }
                 }
             };
 
-            // Savings Chart
             const savingsCtx = document.getElementById('savingsChart')?.getContext('2d');
             if (savingsCtx) {
                 new Chart(savingsCtx, {
                     type: 'doughnut',
                     data: {
-                        labels:,
+                        labels: ['Bergbahnen Gerlitzen', 'Affenberg', 'Pyramidenkogel', 'Tierpark Rosegg', 'Nockalmstraße'],
                         datasets: [{
                             label: 'Ersparnis in €',
                             data: [71.50, 41.00, 40.00, 39.00, 24.00],
-                            backgroundColor:,
+                            backgroundColor: ['#6B8A7A', '#A77360', '#D6C3B3', '#8B7E74', '#C3B091'],
                             borderColor: '#F8F7F4',
                             borderWidth: 4,
                         }]
@@ -351,23 +460,22 @@
                 });
             }
 
-            // Hike Compare Chart
             const hikeCompareCtx = document.getElementById('hikeCompareChart')?.getContext('2d');
             if (hikeCompareCtx) {
                 new Chart(hikeCompareCtx, {
                     type: 'bar',
                     data: {
-                        labels:,
+                        labels: ['Gerlitzen Alpe', 'Nockalmstraße', 'Tschiernock'],
                         datasets: [
                             {
                                 label: 'Familienfreundlichkeit (1-5)',
-                                data: [1, 2, 3],
+                                data: [5, 4, 2],
                                 backgroundColor: '#6B8A7A',
                                 borderWidth: 1
                             },
                             {
                                 label: 'Dauer (h)',
-                                data: [1.5, 1, 4], // Assuming 4h for Tschiernock
+                                data: [1.5, 1, 4],
                                 backgroundColor: '#A77360',
                                 borderWidth: 1
                             }
@@ -389,27 +497,29 @@
                 });
             }
 
-            // Filter Logic
             const weatherFilter = document.getElementById('weather-filter');
+            if(weatherFilter) {
+                weatherFilter.addEventListener('click', (e) => {
+                    if (e.target.tagName === 'BUTTON') {
+                        currentFilters.weather = e.target.dataset.weather;
+                        weatherFilter.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+                        e.target.classList.add('active');
+                        renderActivities();
+                    }
+                });
+            }
+
             const typeFilter = document.getElementById('type-filter');
-
-            weatherFilter.addEventListener('click', (e) => {
-                if (e.target.tagName === 'BUTTON') {
-                    currentFilters.weather = e.target.dataset.weather;
-                    weatherFilter.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
-                    e.target.classList.add('active');
-                    renderActivities();
-                }
-            });
-
-            typeFilter.addEventListener('click', (e) => {
-                if (e.target.tagName === 'BUTTON') {
-                    currentFilters.type = e.target.dataset.type;
-                    typeFilter.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
-                    e.target.classList.add('active');
-                    renderActivities();
-                }
-            });
+            if(typeFilter) {
+                typeFilter.addEventListener('click', (e) => {
+                    if (e.target.tagName === 'BUTTON') {
+                        currentFilters.type = e.target.dataset.type;
+                        typeFilter.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+                        e.target.classList.add('active');
+                        renderActivities();
+                    }
+                });
+            }
 
             renderActivities();
         });
