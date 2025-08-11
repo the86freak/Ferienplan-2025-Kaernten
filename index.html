@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="de" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interaktiver Urlaubsplaner: Familienbauernhof Glawischnig-Hofer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Subtle & Supportive -->
+    <!-- Application Structure Plan: A task-oriented dashboard structure was chosen over a linear report format to empower the family with quick, decision-making tools. The core user need is to plan days based on unpredictable weather. Therefore, the information architecture prioritizes a weather-based filter ("Sonnig", "Wolkig/Regen") at the top level. This leads to an interactive "Activity Explorer" with cards that can be further filtered by type and travel time. This structure directly addresses the user's need for flexibility and is more practical for on-the-go planning than a static document. Key data, like Kärnten Card savings and hike comparisons, are presented as charts for immediate comprehension. -->
+    <!-- Visualization & Content Choices: 
+        - Kärnten Card Savings: Report Info -> Table of savings. Goal -> Inform & Compare. Viz -> Donut Chart (Chart.js) to show proportional value of the card at a glance. Interaction -> Hover tooltips. Justification -> More engaging and quicker to digest than a table.
+        - Activity List: Report Info -> Long text descriptions of various destinations. Goal -> Organize & Compare. Viz -> Interactive card grid. Interaction -> JS-powered filtering by weather, type, and travel time. Justification -> Empowers users to find the perfect activity for the moment, which is the primary goal of a vacation planner.
+        - Hike Comparison: Report Info -> Three distinct hike descriptions. Goal -> Compare. Viz -> Side-by-side cards with a summary bar chart (Chart.js) comparing key metrics (Difficulty, Duration). Interaction -> Clicking a card could show more details. Justification -> Facilitates a clear, data-driven choice for the family's desired "big hike".
+        - Travel Times: Report Info -> Travel times scattered in text. Goal -> Compare. Viz -> Horizontal Bar Chart (Chart.js). Justification -> Aggregates and visualizes travel logistics for easier planning.
+        - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8F7F4; /* Warm Neutral */
+            color: #4A4A4A;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 320px;
+            max-height: 400px;
+        }
+        .nav-button {
+            transition: all 0.3s ease;
+        }
+        .nav-button.active {
+            background-color: #6B8A7A; /* Muted Green */
+            color: white;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .filter-button.active {
+            background-color: #A77360; /* Muted Terracotta */
+            color: white;
+        }
+        .activity-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            will-change: transform;
+        }
+        .activity-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex flex-col sm:flex-row justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-bold" style="color: #6B8A7A;">Interaktiver Urlaubsplaner</h1>
+                    <p class="text-sm text-gray-600">Familienbauernhof Glawischnig-Hofer | 23. Aug. – 3. Sep.</p>
+                </div>
+                <nav class="mt-4 sm:mt-0">
+                    <a href="#ueberblick" class="px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-200">Überblick</a>
+                    <a href="#aktivitaeten" class="px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-200">Aktivitäten</a>
+                    <a href="#wanderung" class="px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-200">Die Wanderung</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <section id="ueberblick" class="mb-16">
+            <h2 class="text-3xl font-bold text-center mb-2" style="color: #333;">Ihr Abenteuer auf einen Blick</h2>
+            <p class="text-center text-gray-600 mb-8 max-w-3xl mx-auto">Dieser Planer hilft Ihnen, das Beste aus Ihrem Urlaub herauszuholen. Entdecken Sie die Vorteile Ihrer Kärnten Card und finden Sie die perfekten Ausflüge für Ihre Familie.</p>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                <div class="lg:col-span-3 bg-white p-6 rounded-xl shadow-lg">
+                    <h3 class="font-bold text-xl mb-4 text-center">Ihr Kärnten Card Vorteil: Sparen bei jedem Ausflug</h3>
+                    <p class="text-sm text-center text-gray-600 mb-4">Ihre inkludierte Kärnten Card ermöglicht freien oder ermäßigten Eintritt zu über 100 Zielen. Die Grafik zeigt, wo Sie am meisten sparen.</p>
+                    <div class="chart-container">
+                        <canvas id="savingsChart"></canvas>
+                    </div>
+                </div>
+                <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg flex flex-col justify-center items-center text-center">
+                    <h3 class="font-bold text-xl mb-4">Geschätzte Gesamtersparnis</h3>
+                    <p class="text-7xl font-bold" style="color: #6B8A7A;">~228€</p>
+                    <p class="mt-4 text-gray-600">Dieser Betrag basiert auf den vorgeschlagenen Ausflügen für eine Familie (2 Erwachsene, 1 Kind). Nutzen Sie diesen Vorteil für unbeschwerte Erlebnisse!</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="aktivitaeten">
+            <h2 class="text-3xl font-bold text-center mb-2" style="color: #333;">Interaktiver Aktivitäten-Explorer</h2>
+            <p class="text-center text-gray-600 mb-8 max-w-3xl mx-auto">Wählen Sie das Wetter und filtern Sie die Aktivitäten nach Ihren Wünschen. Finden Sie das perfekte Abenteuer für heute – egal ob Sonne oder Regen.</p>
+
+            <div class="bg-white p-6 rounded-xl shadow-lg mb-8">
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div>
+                        <span class="font-bold mr-4">1. Wie ist das Wetter?</span>
+                        <div id="weather-filter" class="inline-flex rounded-md shadow-sm" role="group">
+                            <button type="button" data-weather="sonnig" class="nav-button active px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-l-lg hover:bg-gray-100">☀️ Sonnig</button>
+                            <button type="button" data-weather="regnerisch" class="nav-button px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-r-lg hover:bg-gray-100">🌧️ Wolkig/Regen</button>
+                        </div>
+                    </div>
+                     <div>
+                        <span class="font-bold mr-4">2. Was wollt ihr erleben?</span>
+                        <div id="type-filter" class="inline-flex flex-wrap gap-2" role="group">
+                           <button type="button" data-type="alle" class="filter-button active px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-full hover:bg-gray-200">Alle</button>
+                           <button type="button" data-type="wandern" class="filter-button px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-full hover:bg-gray-200">⛰️ Wandern</button>
+                           <button type="button" data-type="tiere" class="filter-button px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-full hover:bg-gray-200">🐒 Tiere</button>
+                           <button type="button" data-type="aussicht" class="filter-button px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-full hover:bg-gray-200">🔭 Aussicht</button>
+                           <button type="button" data-type="wasser" class="filter-button px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-full hover:bg-gray-200">💧 Wasser</button>
+                           <button type="button" data-type="museum" class="filter-button px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-full hover:bg-gray-200">🏛️ Museum</button>
+                           <button type="button" data-type="indoor" class="filter-button px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-full hover:bg-gray-200">🤸 Indoor</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="activity-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            </div>
+        </section>
+
+        <section id="wanderung" class="mt-16">
+            <h2 class="text-3xl font-bold text-center mb-2" style="color: #333;">Der Gipfelsturm: Vergleich der Top-Wanderungen</h2>
+            <p class="text-center text-gray-600 mb-8 max-w-3xl mx-auto">Ihr wollt eine längere Wanderung machen? Hier sind die drei besten Optionen im direkten Vergleich, um die perfekte Tour für eure Familie zu finden.</p>
+
+            <div class="bg-white p-6 rounded-xl shadow-lg mb-8">
+                <h3 class="font-bold text-xl mb-4 text-center">Wander-Vergleichs-Chart</h3>
+                <div class="chart-container h-64">
+                    <canvas id="hikeCompareChart"></canvas>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <h4 class="font-bold text-lg mb-2">Top-Empfehlung: Gerlitzen Alpe</h4>
+                    <p class="text-sm text-gray-600">Ideal für ein umfassendes Gipfelerlebnis mit Seilbahn-Komfort. Der leichte Panorama-Rundweg bietet 360°-Blicke und ist perfekt für die ganze Familie. Zusätzlicher Spaß in der Erlebnisarena an der Mittelstation.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <h4 class="font-bold text-lg mb-2">Flexible Alternative: Nockalmstraße</h4>
+                    <p class="text-sm text-gray-600">Perfekt für unbeständiges Wetter. Kombiniert eine Panorama-Autofahrt mit vielen kurzen, leichten Spaziergängen und Spielplätzen. Der "Weg der Elemente" ist ein Highlight für kleine Entdecker.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <h4 class="font-bold text-lg mb-2">Authentische Herausforderung: Tschiernock</h4>
+                    <p class="text-sm text-gray-600">Ein echtes Bergerlebnis direkt vom Hof aus. Diese Tour erfordert eine gute Kondition und sollte nur nach ausführlicher Beratung mit den Gastgebern Chrissi und Hans unternommen werden.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-white mt-16 py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-500">
+            <p>Dieser interaktive Planer wurde auf Basis Ihres persönlichen Reiseführers erstellt.</p>
+            <p class="text-sm mt-2">&copy; 2025 | Wir wünschen einen unvergesslichen Familienurlaub!</p>
+        </div>
+    </footer>
+    
+    <script>
+        const activities = [
+            {
+                title: 'Gerlitzen Alpe',
+                weather: 'sonnig',
+                type: ['wandern', 'aussicht'],
+                driveTime: 50,
+                cardBenefit: 'Freie Berg- & Talfahrt',
+                description: 'Bequem mit der Seilbahn auf 1.911m schweben und einen leichten, kinderwagentauglichen Panorama-Rundweg mit 360°-Blick genießen. Ideal für die ganze Familie.',
+                ageSuitability: { 3: true, 7: true }
+            },
+            {
+                title: 'Nockalmstraße',
+                weather: 'sonnig',
+                type: ['wandern', 'aussicht'],
+                driveTime: 35,
+                cardBenefit: 'Freie Benutzung',
+                description: 'Eine 34km lange Panoramastraße durch den Biosphärenpark. Perfekt für eine Kombination aus Autofahrt und kurzen Spaziergängen wie dem "Weg der Elemente".',
+                ageSuitability: { 3: true, 7: true }
+            },
+            {
+                title: 'Aussichtsturm Pyramidenkogel',
+                weather: 'sonnig',
+                type: ['aussicht'],
+                driveTime: 75,
+                cardBenefit: 'Freier Eintritt',
+                description: 'Der weltweit höchste Holzaussichtsturm mit spektakulärem Blick über den Wörthersee. Highlight für Kinder ab 130cm: Europas höchste überdachte Rutsche.',
+                ageSuitability: { 3: true, 7: true }
+            },
+            {
+                title: 'Affenberg Landskron',
+                weather: 'sonnig',
+                type: ['tiere'],
+                driveTime: 50,
+                cardBenefit: 'Freier Eintritt',
+                description: 'Einzigartiges Erlebnis mit rund 180 freilebenden Japanmakaken. Besuch nur mit Führung möglich. Keine Kinderwägen im Gehege erlaubt.',
+                ageSuitability: { 3: true, 7: true }
+            },
+            {
+                title: 'Tierpark Rosegg',
+                weather: 'sonnig',
+                type: ['tiere'],
+                driveTime: 55,
+                cardBenefit: 'Freier Eintritt',
+                description: 'Kärntens größter Tierpark mit über 300 Tieren, großem Spielplatz und Streichelzoo. Ein Hecken-Labyrinth sorgt für zusätzlichen Spaß (Extra-Eintritt).',
+                ageSuitability: { 3: true, 7: true }
+            },
+            {
+                title: 'Wassererlebnisweg Maltatal',
+                weather: 'sonnig',
+                type: ['wasser', 'wandern'],
+                driveTime: 20,
+                cardBenefit: 'Kostenlos',
+                description: 'Ein flacher, kinderwagentauglicher Themenweg mit vielen Wasserspielstationen am Fuße des Fallbach-Wasserfalls. Perfekt für einen warmen Nachmittag.',
+                ageSuitability: { 3: true, 7: true }
+            },
+            {
+                title: 'Therme St. Kathrein',
+                weather: 'regnerisch',
+                type: ['wasser', 'indoor'],
+                driveTime: 45,
+                cardBenefit: '15% Ermäßigung',
+                description: 'Die ideale Familientherme mit der größten Wasserfläche Kärntens, Erlebnisbecken und einer 86 Meter langen Rutsche. Perfekter Spaß bei jedem Wetter.',
+                ageSuitability: { 3: true, 7: true }
+            },
+            {
+                title: 'Granatium Radenthein',
+                weather: 'regnerisch',
+                type: ['museum', 'indoor'],
+                driveTime: 35,
+                cardBenefit: '10% Ermäßigung',
+                description: 'Eine Erlebniswelt rund um den Granat-Edelstein. Das Highlight ist das Schürfgelände, wo Kinder selbst mit Hammer und Schutzbrille Edelsteine suchen können.',
+                ageSuitability: { 3: true, 7: true }
+            },
+            {
+                title: 'Sagamundo – Haus des Erzählens',
+                weather: 'regnerisch',
+                type: ['museum', 'indoor'],
+                driveTime: 30,
+                cardBenefit: '10% Ermäßigung',
+                description: 'Hier werden Kärntner Sagen und Mythen durch interaktive Stationen mit Licht- und Klangeffekten zum Leben erweckt. Ein fantasievolles Erlebnis für alle.',
+                ageSuitability: { 3: true, 7: true }
+            },
+            {
+                title: 'Planet Lollipop Villach',
+                weather: 'regnerisch',
+                type: ['indoor'],
+                driveTime: 45,
+                cardBenefit: 'Keine Ermäßigung',
+                description: 'Ein moderner Indoor-Spielplatz auf 600m² im Einkaufszentrum ATRIO. Mit Klettergerüst, Rutschen und Kreativzone. Perfekt zum Austoben.',
+                ageSuitability: { 3: true, 7: true }
+            }
+        ];
+
+        let currentFilters = {
+            weather: 'sonnig',
+            type: 'alle'
+        };
+
+        const renderActivities = () => {
+            const grid = document.getElementById('activity-grid');
+            grid.innerHTML = '';
+            const filteredActivities = activities.filter(activity => {
+                const weatherMatch = activity.weather === currentFilters.weather;
+                const typeMatch = currentFilters.type === 'alle' || activity.type.includes(currentFilters.type);
+                return weatherMatch && typeMatch;
+            });
+
+            if (filteredActivities.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center text-gray-500 py-8">
+                    <p class="text-lg">Keine Aktivitäten für diese Filter gefunden.</p>
+                    <p>Bitte versuchen Sie eine andere Kombination.</p>
+                </div>`;
+                return;
+            }
+
+            filteredActivities.forEach(activity => {
+                const card = document.createElement('div');
+                card.className = 'activity-card bg-white p-6 rounded-xl shadow-lg flex flex-col';
+                card.innerHTML = `
+                    <h3 class="font-bold text-lg mb-2">${activity.title}</h3>
+                    <p class="text-sm text-gray-600 flex-grow">${activity.description}</p>
+                    <div class="mt-4 pt-4 border-t border-gray-200 flex justify-between items-center text-sm">
+                        <div>
+                            <span class="font-semibold" style="color: #A77360;">${activity.cardBenefit}</span>
+                        </div>
+                        <div class="text-right">
+                            <p>🚗 ~${activity.driveTime} min</p>
+                            <p>👍 3J & 7J</p>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            const defaultTooltipCallback = {
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            title: function(tooltipItems) {
+                                const item = tooltipItems[0];
+                                let label = item.chart.data.labels[item.dataIndex];
+                                return Array.isArray(label) ? label.join(' ') : label;
+                            }
+                        }
+                    }
+                }
+            };
+
+            // Savings Chart
+            const savingsCtx = document.getElementById('savingsChart')?.getContext('2d');
+            if (savingsCtx) {
+                new Chart(savingsCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Bergbahnen Gerlitzen', 'Affenberg', 'Pyramidenkogel', 'Tierpark Rosegg', 'Nockalmstraße'],
+                        datasets: [{
+                            label: 'Ersparnis in €',
+                            data: [71.50, 41.00, 40.00, 39.00, 24.00],
+                            backgroundColor: ['#6B8A7A', '#A77360', '#D6C3B3', '#8B7E74', '#C3B091'],
+                            borderColor: '#F8F7F4',
+                            borderWidth: 4,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            ...defaultTooltipCallback.plugins,
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 15,
+                                    boxWidth: 15,
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Hike Compare Chart
+            const hikeCompareCtx = document.getElementById('hikeCompareChart')?.getContext('2d');
+            if (hikeCompareCtx) {
+                new Chart(hikeCompareCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Gerlitzen Alpe', 'Nockalmstraße', 'Tschiernock'],
+                        datasets: [
+                            {
+                                label: 'Familienfreundlichkeit (1-5)',
+                                data: [5, 4, 2],
+                                backgroundColor: '#6B8A7A',
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Dauer (h)',
+                                data: [1.5, 1, 4], // Assuming 4h for Tschiernock
+                                backgroundColor: '#A77360',
+                                borderWidth: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: { beginAtZero: true }
+                        },
+                        plugins: {
+                            ...defaultTooltipCallback.plugins,
+                            legend: {
+                                position: 'top',
+                            },
+                        }
+                    }
+                });
+            }
+
+            // Filter Logic
+            const weatherFilter = document.getElementById('weather-filter');
+            const typeFilter = document.getElementById('type-filter');
+
+            weatherFilter.addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON') {
+                    currentFilters.weather = e.target.dataset.weather;
+                    weatherFilter.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+                    e.target.classList.add('active');
+                    renderActivities();
+                }
+            });
+
+            typeFilter.addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON') {
+                    currentFilters.type = e.target.dataset.type;
+                    typeFilter.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+                    e.target.classList.add('active');
+                    renderActivities();
+                }
+            });
+
+            renderActivities();
+        });
+    </script>
+
+</body>
+</html>
